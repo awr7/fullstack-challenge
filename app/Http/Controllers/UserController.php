@@ -12,7 +12,8 @@ class UserController extends Controller
     {
         $usersQuery = User::query();
 
-        if ($request->has('country')) {
+        // Handle country filter
+        if ($request->filled('country')) {
             $usersQuery->where('country', $request->country);
         }
 
@@ -28,7 +29,7 @@ class UserController extends Controller
         ])->get();
 
         // Apply filtering in PHP
-        if ($request->has('comment_activity_trend')) {
+        if ($request->filled('comment_activity_trend')) {
             $trend = $request->input('comment_activity_trend');
             $users = $users->filter(function ($user) use ($trend) {
                 if ($trend === 'higher') {
@@ -43,13 +44,9 @@ class UserController extends Controller
         }
 
         // Apply sorting in PHP
-        if ($request->has('sort_by')) {
-            $sort_by = $request->input('sort_by');
-            if ($sort_by === 'comments_today') {
-                $users = $users->sortByDesc('comments_today');
-            } else {
-                $users = $users->sortByDesc('created_at');
-            }
+        $sort_by = $request->input('sort_by', 'created_at');
+        if ($sort_by === 'comments_today') {
+            $users = $users->sortByDesc('comments_today');
         } else {
             $users = $users->sortByDesc('created_at');
         }
@@ -85,6 +82,7 @@ class UserController extends Controller
             'total' => $users->count(),
             'current_page' => $page,
             'per_page' => $perPage,
+            'total_pages' => ceil($users->count() / $perPage)
         ]);
     }
 
